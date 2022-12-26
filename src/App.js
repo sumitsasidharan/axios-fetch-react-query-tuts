@@ -1,5 +1,8 @@
 import Title from './components/Title';
-import SetUp from './examples/3-post-request';
+import SetUp from './examples/6-interceptors';
+
+// axios global settings
+import './axios/global';
 
 function App() {
   return (
@@ -11,4 +14,3 @@ function App() {
 }
 
 export default App;
-// 15.52
