@@ -32,13 +32,13 @@
 
 ### STEP 2: React Tanstack Query Setup
 
-1. Import <mark>QueryClient and QueryClientProvider</mark> from 'react-query' in App.jsx.
+1. Import `QueryClient` and `QueryClientProvider` from 'react-query' in App.jsx.
 2. Wrap the whole component with QueryClientProvider.
 3. Create an instance of the 'QueryClient':
 
    `const queryClient = new QueryClient();`
 
-4. Add a <mark>'client'</mark> prop in the <mark><QueryClientProvider></mark> component, and pass the 'queryClient' instance.
+4. Add a 'client' prop in the <QueryClientProvider> component, and pass the 'queryClient' instance.
 
    `<QueryClientProvider client={queryClient} >`
 
