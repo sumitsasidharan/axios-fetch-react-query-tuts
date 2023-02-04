@@ -90,7 +90,9 @@ const fetchSuperHeroes = () => {
 }
 
 const RQSuperHeroesPage = () => {
-   const { isLoading, data, isError, error } = useQuery('super-heroes', fetchSuperHeroes);
+   const { isLoading, data, isError, error, isFetching } = useQuery('super-heroes', fetchSuperHeroes, {
+      cacheTime: 5000,  // 5 seconds, default is 5 minutes
+   });
 
    if (isLoading) {
       return <h1>Loading...</h1>
@@ -114,7 +116,7 @@ const RQSuperHeroesPage = () => {
 export default RQSuperHeroesPage
 ```
 
-### STEP 4: React Query Dev Tools.
+### React Query Dev Tools.
 
 1. Import `ReactQueryDevtools` from 'react-query/devtools'.
 2. Add the `ReactQueryDevtools` component before the closing </QueryClientProvider> tag.
@@ -127,3 +129,7 @@ npm i @tanstack/react-query-devtools
 ```js
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 ```
+
+### Points to Remember.
+
+1. 'Polling' refers to fetching data at regular intervals, like in stocks trading.
