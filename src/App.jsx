@@ -4,6 +4,7 @@ import RQSuperHeroesPage from './components/RQSuperHeroes.page';
 import SuperHeroesPage from './components/SuperHeroes.page';
 
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
 
 import './App.css';
 
@@ -11,7 +12,7 @@ const queryClient = new QueryClient();
 
 function App() {
    return (
-      <QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
          <nav>
             <ul>
                <li>
@@ -32,6 +33,8 @@ function App() {
 
             <Route path="*" element={<h1>Not Found</h1>} />
          </Routes>
+
+         <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       </QueryClientProvider>
    );
 }

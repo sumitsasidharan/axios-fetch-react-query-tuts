@@ -42,10 +42,88 @@
 
    `<QueryClientProvider client={queryClient} >`
 
-App.jsx Code:
+5. App.jsx Code:
 
 ```js
+import { Link, Route, Routes } from 'react-router-dom';
+
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
 
+const queryClient = new QueryClient();
 
+function App() {
+   return (
+      <QueryClientProvider client={queryClient}>
+         <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/super-heroes" element={<SuperHeroesPage />} />
+            <Route path="/rq-super-heroes" element={<RQSuperHeroesPage />} />
+
+            <Route path="*" element={<h1>Not Found</h1>} />
+         </Routes>
+
+         <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
+      </QueryClientProvider>
+   );
+}
+
+export default App;
+```
+
+### STEP 3: React Query Fetching, http get method.
+
+1. Import `useQuery` hook from `react-query`.
+
+   `import { useQuery } from "react-query";`
+
+2. `useQuery' hook requires at least 2 arguments. First argument is the unique key to identify this query. Second, a call back function that returns a Promise, which is the fetcher function to fetch data.
+
+3. Code Example:
+
+```js
+import { useQuery } from "react-query";
+import axios from "axios";
+
+const fetchSuperHeroes = () => {
+   return axios.get('http://localhost:4000/superheroes');
+}
+
+const RQSuperHeroesPage = () => {
+   const { isLoading, data, isError, error } = useQuery('super-heroes', fetchSuperHeroes);
+
+   if (isLoading) {
+      return <h1>Loading...</h1>
+   }
+
+   if (isError) {
+      return <h1>{error.message}</h1>
+   }
+
+  return (
+     <>
+        <h1>RQ Super Heroes Page</h1>
+
+        {data?.data.map(hero => {
+         return <div key={hero.id} >{hero.name}</div>
+        })}
+     </>
+  );
+}
+
+export default RQSuperHeroesPage
+```
+
+### STEP 4: React Query Dev Tools.
+
+1. Import `ReactQueryDevtools` from 'react-query/devtools'.
+2. Add the `ReactQueryDevtools` component before the closing </QueryClientProvider> tag.
+3. `Devtools` can also be added by installing `react-query-devtools`, and importing `ReactQueryDevtools` from `@tanstack/react-query-devtools`.
+
+```node
+npm i @tanstack/react-query-devtools
+```
+
+```js
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 ```
