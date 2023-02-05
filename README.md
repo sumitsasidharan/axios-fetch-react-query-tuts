@@ -133,3 +133,20 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 ### Points to Remember.
 
 1. 'Polling' refers to fetching data at regular intervals, like in stocks trading.
+
+## How to use `useQuery' hook to post data.
+
+* To stop useQuery hook from fetching on Component Mount, pass 'enabled: false' property in the 3rd argument object.
+
+* Destructure the function called `refetch` in the `useQuery` hook and pass it in the `onClick` event on a button, etc.
+
+```js
+const { isLoading, ... , refetch } = useQuery(
+      '<unique-id-string>',
+      fetchData,
+      {
+         enabled: false,  // this will stop useQuery from fetching automatically at Component Mount
+      }
+
+<button onClick={refetch}>fetch Data</button>
+```
