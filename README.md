@@ -1,5 +1,10 @@
 ## REACT TANSTACK QUERY TUTORIAL
 
+### REACT TANSTACK QUERY DOCS LINK:
+
+[React-Tanstack-Query Docs](https://tanstack.com/query/v4/docs/react/overview)
+
+
 ### STEP 1: Install json-server
 
 1. Install `json-server`
@@ -85,32 +90,71 @@ export default App;
 import { useQuery } from "react-query";
 import axios from "axios";
 
+// IMPORTANT: To stop useQuery hook from fetching on Mount, pass 'enabled: false' property in the 3rd argument object.
+
 const fetchSuperHeroes = () => {
    return axios.get('http://localhost:4000/superheroes');
 }
 
 const RQSuperHeroesPage = () => {
-   const { isLoading, data, isError, error, isFetching } = useQuery('super-heroes', fetchSuperHeroes, {
-      cacheTime: 5000,  // 5 seconds, default is 5 minutes
-   });
+   // callback when query succeeds, fetches data successfully
+   const onSuccess = (data) => {
+      // receives data, can be dispatched to 'redux' or other state manager
+      // it should be 'data.data' for axios.
+      console.log('perform side effect after data fetching successfully...')
+   }
 
-   if (isLoading) {
-      return <h1>Loading...</h1>
+   // callback when there's error while fetching.
+   const onError = (error) => {
+      console.log('perform side effect after encountering error..')
+   }
+
+   const { isLoading, data, isError, error, isFetching, refetch } = useQuery(
+      'super-heroes',
+      fetchSuperHeroes,
+      {
+         cacheTime: 120000, // 120 seconds, default is 5 minutes
+         staleTime: 30000, // 30 seconds, stale data for 30 seconds, ie. wont fetch for 30 secs, then refetch fresh data in the background (DEFAULT IS 0 SECONDS)
+         refetchOnMount: true, // true by default, will refetch on mount  if stale data, 'always' options will fetch even if data is not stale
+         refetchOnWindowFocus: true, // default: true, refetches fresh data when browser tab is on focus again, if data is stale. ('always' will always fetch)
+         refetchInterval: false, // set to false by default, if set to 2000 for 2 seconds, will always fetch every 2 seconds, if tab in focus.
+         refetchIntervalInBackground: true, // false by default, will refetch every interval even if tab is out of focus.
+         enabled: false, // won't fetch on Component Mount (to prevent FETCHING BY DEFAULT ON COMPONENT MOUNT)
+         onSuccess: onSuccess, // side effect callback on success
+         onError: onError,  // side effect code on error
+         select: (data) => {
+            // function for transforming data if needed. Like a middleware that transforms and provides data that is required directly
+            const newTransformedData = data.data.map(hero => hero.name);
+            return newTransformedData;
+         }
+      }
+   );
+
+   // DISPLAY LOADING if 'Loading' or 'fetching' fresh data. (not needed)
+   if (isLoading || isFetching) {
+      return <h1>Loading...</h1>;
    }
 
    if (isError) {
-      return <h1>{error.message}</h1>
+      return <h1>{error.message}</h1>;
    }
 
-  return (
-     <>
-        <h1>RQ Super Heroes Page</h1>
+   return (
+      <>
+         <h1>RQ Super Heroes Page</h1>
 
-        {data?.data.map(hero => {
-         return <div key={hero.id} >{hero.name}</div>
-        })}
-     </>
-  );
+         <button onClick={refetch}>fetch Data</button>
+
+         {/* {data?.data.map((hero) => {
+            return <div key={hero.id}>{hero.name}</div>;
+         })} */}
+
+         {/* DATA AFTER TRANSFORMING in the 'select' function */}
+         {data?.map(heroName => {
+            return <div key={heroName}>{heroName}</div>;
+         })}
+      </>
+   );
 }
 
 export default RQSuperHeroesPage
@@ -132,9 +176,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 ### Points to Remember.
 
-1. 'Polling' refers to fetching data at regular intervals, like in stocks trading.
+1. 'Polling' refers to fetching data at regular intervals, useful for stocks trading.
 
-## How to use `useQuery' hook to post data.
+## How to disable fetch by default.
 
 * To stop useQuery hook from fetching on Component Mount, pass 'enabled: false' property in the 3rd argument object.
 
@@ -149,4 +193,114 @@ const { isLoading, ... , refetch } = useQuery(
       }
 
 <button onClick={refetch}>fetch Data</button>
+```
+
+## Custom `useQuery' hook, for global configuration.
+
+### the `useQuery` Custom Hook code example
+
+```js
+import { useQuery } from 'react-query';
+
+import axios from 'axios';
+
+// IMPORTANT: To stop useQuery hook from fetching on Mount, pass 'enabled: false' property in the 3rd argument object.
+
+const fetchSuperHeroes = () => {
+   return axios.get('http://localhost:4000/superheroes');
+};
+
+export const useSuperHeroesData = (onSuccess, onError) => {
+   return useQuery('super-heroes', fetchSuperHeroes, {
+      cacheTime: 120000, // 120 seconds, default is 5 minutes
+      staleTime: 30000, // 30 seconds, stale data for 30 seconds, ie. wont fetch for 30 secs, then refetch fresh data in the background (DEFAULT IS 0 SECONDS)
+      refetchOnMount: true, // true by default, will refetch on mount  if stale data, 'always' options will fetch even if data is not stale
+      refetchOnWindowFocus: true, // default: true, refetches fresh data when browser tab is on focus again, if data is stale. ('always' will always fetch)
+      refetchInterval: false, // set to false by default, if set to 2000 for 2 seconds, will always fetch every 2 seconds, if tab in focus.
+      refetchIntervalInBackground: true, // false by default, will refetch every interval even if tab is out of focus.
+      enabled: false, // won't fetch on Component Mount (to prevent FETCHING BY DEFAULT ON COMPONENT MOUNT)
+      onSuccess: onSuccess, // side effect callback on success
+      onError: onError, // side effect code on error
+      select: (data) => {
+         // function for transforming data if needed. Like a middleware that transforms and provides data that is required directly
+         const newTransformedData = data.data.map((hero) => hero.name);
+         return newTransformedData;
+      },
+   });
+};
+```
+
+* In the component:
+
+```js
+const onSuccess = (data) => {
+      // receives data, can be dispatched to 'redux' or other state manager
+      // it should be 'data.data' for axios.
+      console.log('perform side effect after data fetching successfully...');
+   };
+
+   // callback when there's error while fetching.
+   const onError = (error) => {
+      console.log('perform side effect after encountering error..');
+   };
+
+   // call the custom hook
+   const { isLoading, data, isError, error, isFetching, refetch } =
+      useSuperHeroesData(onSuccess, onError);
+```
+
+### Custom Query Hook for ID (Single Page)
+
+* the Custom Hook for Single ID
+
+```js
+import { useQuery } from "react-query";
+import axios from "axios";
+
+// destructure react-query params
+const fetchSuperHero = ({ queryKey }) => {
+   // ID is in index postion 1
+   const heroId = queryKey[1];
+   return axios.get(`http://localhost:4000/superheroes/${heroId}`);
+}
+
+export const useSuperHeroData = (heroId) => {
+   // IMPORTANT: react-query automatically passes the ID in fetcher function
+   return useQuery(['super-hero', heroId], fetchSuperHero);
+```
+
+* In the component, pass the ID in custom hook:
+
+```js
+import { useParams } from 'react-router-dom';
+import { useSuperHeroData } from '../hooks/useSuperHeroData';
+
+const { heroId } = useParams();
+const { isLoading, data, isError, error } = useSuperHeroData(heroId);
+```
+
+
+## Fetching Multiple API Engpoints in parallel:
+
+```js
+import { useQuery } from 'react-query';
+import axios from 'axios';
+
+const fetchSuperHeroes = () => {
+   return axios.get('http://localhost:4000/superheroes');
+}
+
+const fetchFriends = () => {
+   return axios.get('http://localhost:4000/friends');
+}
+
+const ParallelQuerries = () => {
+   // use ALIASES to prevent variable name clash
+   const { data: superHeroesData } = useQuery('super-heroes', fetchSuperHeroes);
+   const { data: friendsData } = useQuery('friends', fetchFriends);
+
+   return <div>ParallelQuerries</div>;
+};
+
+export default ParallelQuerries;
 ```

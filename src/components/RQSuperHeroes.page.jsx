@@ -8,6 +8,18 @@ const fetchSuperHeroes = () => {
 }
 
 const RQSuperHeroesPage = () => {
+   // callback when query succeeds, fetches data successfully
+   const onSuccess = (data) => {
+      // receives data, can be dispatched to 'redux' or other state manager
+      // it should be 'data.data' for axios.
+      console.log('perform side effect after data fetching successfully...')
+   }
+
+   // callback when there's error while fetching.
+   const onError = (error) => {
+      console.log('perform side effect after encountering error..')
+   }
+
    const { isLoading, data, isError, error, isFetching, refetch } = useQuery(
       'super-heroes',
       fetchSuperHeroes,
@@ -19,6 +31,13 @@ const RQSuperHeroesPage = () => {
          refetchInterval: false, // set to false by default, if set to 2000 for 2 seconds, will always fetch every 2 seconds, if tab in focus.
          refetchIntervalInBackground: true, // false by default, will refetch every interval even if tab is out of focus.
          enabled: false, // won't fetch on Component Mount (to prevent FETCHING BY DEFAULT ON COMPONENT MOUNT)
+         onSuccess: onSuccess, // side effect callback on success
+         onError: onError,  // side effect code on error
+         select: (data) => {
+            // function for transforming data if needed. Like a middleware that transforms and provides data that is required directly
+            const newTransformedData = data.data.map(hero => hero.name);
+            return newTransformedData;
+         }
       }
    );
 
@@ -37,8 +56,13 @@ const RQSuperHeroesPage = () => {
 
          <button onClick={refetch}>fetch Data</button>
 
-         {data?.data.map((hero) => {
+         {/* {data?.data.map((hero) => {
             return <div key={hero.id}>{hero.name}</div>;
+         })} */}
+
+         {/* DATA AFTER TRANSFORMING in the 'select' function */}
+         {data?.map(heroName => {
+            return <div key={heroName}>{heroName}</div>;
          })}
       </>
    );
