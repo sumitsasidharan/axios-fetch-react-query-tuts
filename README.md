@@ -304,3 +304,118 @@ const ParallelQuerries = () => {
 
 export default ParallelQuerries;
 ```
+
+
+## Fetching Dynamic Multiple API Engpoints in parallel:
+
+* Import `useQueries` from 'react-query'.
+
+```js
+import { useQueries } from 'react-query';
+import axios from 'axios';
+
+const fetchSuperHero = (heroId) => {
+   return axios.get(`http://localhost:4000/superheroes/${heroId}`);
+}
+
+// heroIds is an Array of Hero IDs
+const DynamicParallelPage = ({ heroIds }) => {
+   // Another way of caling useQuery, to prevent violating the rules of hooks
+   // useQueries return an Array of query Results
+   const queryResults = useQueries(
+      heroIds.map(id => {
+         return {
+            queryKey: ['super-hero', id],
+            queryFn: () => fetchSuperHero(id)
+         }
+      })
+   )
+
+   console.log({ queryResults });
+
+   return <div>DynamicParallelPage</div>;
+};
+
+export default DynamicParallelPage;
+```
+
+## Fetching API Engpoints sequentially, one after another.
+
+* When one query is dependent on another query.
+
+```js
+import { useQuery } from 'react-query';
+import axios from 'axios';
+
+const fetchUserByEmail = (email) => {
+   return axios.get(`http://localhost:4000/users/${email}`);
+};
+
+const fetchCoursesByChannelId = (channelId) => {
+   return axios.get(`http://localhost:4000/channels/${channelId}`);
+};
+
+export const DependentQueries = ({ email }) => {
+   // the LoggedIn user's email is passed as a prop
+   const { data: user } = useQuery(['user', email], () =>
+      fetchUserByEmail(email)
+   );
+   const channelId = user?.data.channelId;
+
+   // this useQuery should only be fired when the channelId has been retrieved above.
+   const { data: coursesData } = useQuery(
+      ['courses', channelId],
+      () => fetchCoursesByChannelId(channelId),
+      {
+         enabled: !!channelId,
+      }
+   );
+
+   console.log(coursesData?.data.courses);
+
+   return (
+      <div>
+         <h1>DependentQueries</h1>
+
+         {coursesData?.data.courses.map((course) => {
+               return <h2 key={course}>{course}</h2>;
+            })}
+      </div>
+   );
+};
+```
+
+## Initial Query Data
+
+```js
+import { useQuery, useQueryClient } from 'react-query';
+import axios from 'axios';
+
+// destructure react-query params
+const fetchSuperHero = ({ queryKey }) => {
+   // ID is in index postion 1
+   const heroId = queryKey[1];
+   return axios.get(`http://localhost:4000/superheroes/${heroId}`);
+};
+
+export const useSuperHeroData = (heroId) => {
+   // IMPORTANT: react-query automatically passes the ID in fetcher function
+
+   // queryClient instance has access to data cache
+   const queryClient = useQueryClient();
+   return useQuery(['super-hero', heroId], fetchSuperHero, {
+      initialData: () => {
+         // pass the query id, for which cache data is needed
+         const hero = queryClient
+            .getQueriesData('super-heroes')
+            ?.data?.find((hero) => hero.id === parseInt(heroId));
+
+         if (hero) {
+            return { data: hero };
+         } else {
+            return undefined;  // imp
+         }
+      },
+   });
+};
+```
