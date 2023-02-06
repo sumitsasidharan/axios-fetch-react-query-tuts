@@ -1,5 +1,8 @@
 import { useQuery } from "react-query";
 import axios from "axios";
+import { useState } from "react";
+import { useAddSuperHeroData } from "../hooks/useSuperHeroesData";
+
 
 // IMPORTANT: To stop useQuery hook from fetching on Mount, pass 'enabled: false' property in the 3rd argument object.
 
@@ -8,6 +11,9 @@ const fetchSuperHeroes = () => {
 }
 
 const RQSuperHeroesPage = () => {
+   const [name, setName] = useState('');
+   const [alterEgo, setAlterEgo] = useState('');
+
    // callback when query succeeds, fetches data successfully
    const onSuccess = (data) => {
       // receives data, can be dispatched to 'redux' or other state manager
@@ -41,6 +47,17 @@ const RQSuperHeroesPage = () => {
       }
    );
 
+   // Mutation (Post, delete, patch, etc.)
+   // Alias mutate function, if multiple 
+   const { mutate: addHero, isLoading: isAddHeroLoading, isError: isAddHeroError, error: addHeroError } = useAddSuperHeroData();
+
+   const handleAddHeroClick = () => {
+      console.log({ name, alterEgo })
+
+      const hero = { name, alterEgo};
+      addHero(hero);
+   }
+
    // DISPLAY LOADING if 'Loading' or 'fetching' fresh data. (not needed)
    if (isLoading || isFetching) {
       return <h1>Loading...</h1>;
@@ -53,6 +70,12 @@ const RQSuperHeroesPage = () => {
    return (
       <>
          <h1>RQ Super Heroes Page</h1>
+
+         <div>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            <input type="text" value={alterEgo} onChange={(e) => setAlterEgo(e.target.value)} />
+            <button onClick={handleAddHeroClick} >Add Hero</button>
+         </div>
 
          <button onClick={refetch}>fetch Data</button>
 

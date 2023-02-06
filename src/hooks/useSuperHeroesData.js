@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 import axios from 'axios';
 
@@ -7,6 +7,11 @@ import axios from 'axios';
 const fetchSuperHeroes = () => {
    return axios.get('http://localhost:4000/superheroes');
 };
+
+// fetcher for useMutation
+const addSuperHero = (hero) => {
+   return axios.post('http://localhost:4000/superheroes', hero);
+}
 
 export const useSuperHeroesData = (onSuccess, onError) => {
    return useQuery('super-heroes', fetchSuperHeroes, {
@@ -24,5 +29,37 @@ export const useSuperHeroesData = (onSuccess, onError) => {
       //    const newTransformedData = data.data.map((hero) => hero.name);
       //    return newTransformedData;
       // },
+   });
+};
+
+
+// WITH QUERY INVALIDATION (USE THIS)
+// export const useAddSuperHeroData = () => {
+//    const queryClient = useQueryClient();
+
+//    // doesn't need a key, just a mutation function
+//    return useMutation(addSuperHero, {
+//       onSuccess: () => {
+//          // callback after successful mutation
+//          // key is from the fetch useQuery above
+//          queryClient.invalidateQueries('super-heroes');
+//       }
+//    })
+// }
+
+// FOR UPDATING QUERY CACHE WITHOUT A NETWORK REQUEST
+export const useAddSuperHeroData = () => {
+   const queryClient = useQueryClient();
+
+   // doesn't need a key, just a mutation function
+   return useMutation(addSuperHero, {
+      onSuccess: (data) => {
+         queryClient.setQueryData('super-heroes', (oldQueryData) => {
+            return {
+               ...oldQueryData,
+               data: [...oldQueryData.data, data.data]
+            }
+         })
+      },
    });
 };

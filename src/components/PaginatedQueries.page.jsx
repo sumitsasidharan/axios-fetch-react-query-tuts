@@ -14,7 +14,7 @@ export const PaginatedQueriesPage = () => {
       ['colors', pageNumber],
       () => fetchColors(pageNumber),
       {
-         keepPreviousData: true,
+         keepPreviousData: true // maintain data from last successfull fetch
       }
    );
 
@@ -39,18 +39,12 @@ export const PaginatedQueriesPage = () => {
                );
             })}
          </div>
+
          <div>
-            <button
-               onClick={() => setPageNumber((page) => page - 1)}
-               disabled={pageNumber === 1}>
-               Prev Page
-            </button>
-            <button
-               onClick={() => setPageNumber((page) => page + 1)}
-               disabled={pageNumber === 4}>
-               Next Page
-            </button>
+            <button onClick={() => setPageNumber(page => page - 1)} disabled={pageNumber === 1} >Prev Page</button>
+            <button onClick={() => setPageNumber(page => page + 1)} disabled={pageNumber === 4} >Next Page</button>
          </div>
+         
          {isFetching && 'Loading'}
       </>
    );
