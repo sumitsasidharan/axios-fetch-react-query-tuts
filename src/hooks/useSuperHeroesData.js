@@ -63,3 +63,35 @@ export const useAddSuperHeroData = () => {
       },
    });
 };
+
+
+// FOR OPTIMISTIC QUERIES ONLY
+export const useAddSuperHeroData_OPTI = () => {
+   const queryClient = useQueryClient();
+
+   // doesn't need a key, just a mutation function
+   return useMutation(addSuperHero, {
+      onMutate: async (newHero) => {
+         await queryClient.cancelQueries('super-heroes');
+         const previousHeroData = queryClient.getQueryData('super-heroes');
+         queryClient.setQueryData('super-heroes', (oldQueryData) => {
+            return {
+               ...oldQueryData,
+               data: [...oldQueryData.data, { id: oldQueryData?.data?.length + 1, ...newHero }],
+            };
+         });
+
+         return {
+            previousHeroData,
+         }
+      },
+      onError: (_error, _hero, context) => {
+         queryClient.setQueryData('super-heroes', context.previousHeroData);
+      },
+      // onSettled is called  when mutation is either  successfull or encounters error
+      onSettled: () => {
+         // refetching super-heroes
+         queryClient.invalidateQueries('super-heroes');
+      },
+   });
+};

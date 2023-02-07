@@ -592,7 +592,7 @@ const handleAddHeroClick = () => {
 
 ## Query Invalidation (Automatically Refetch After Mutation)
 
-- Add the below code in Custom Hook:
+-  Add the below code in Custom Hook:
 
 ```js
 import { useQueryClient } from 'react-query';
@@ -607,9 +607,70 @@ export const useAddSuperHeroData = () => {
          // callback after successful mutation
          // key is from the fetch useQuery above
          queryClient.invalidateQueries('super-heroes');
-      }
-   })
-}
+      },
+   });
+};
 ```
 
 ## Alternative for Query Invalidation
+
+```js
+// FOR UPDATING QUERY CACHE WITHOUT A NETWORK REQUEST
+export const useAddSuperHeroData = () => {
+   const queryClient = useQueryClient();
+
+   // doesn't need a key, just a mutation function
+   return useMutation(addSuperHero, {
+      onSuccess: (data) => {
+         queryClient.setQueryData('super-heroes', (oldQueryData) => {
+            return {
+               ...oldQueryData,
+               data: [...oldQueryData.data, data.data],
+            };
+         });
+      },
+   });
+};
+```
+
+## Optimitist Updates
+
+## Handling Axios Interceptor
+
+-  In Axios Utilities:
+
+```js
+import axios from 'axios';
+
+const client = axios.create({ baseURL: 'http://localhost:4000' });
+
+export const request = ({ ...options }) => {
+   client.defaults.headers.common.Authorization = `Bearer token`;
+   const onSuccess = (response) => response;
+   const onError = (error) => {
+      // optionally catch errors and additional logging here
+      console.log(error);
+      // can redirect if status code is 401
+      return error;
+   };
+
+   return client(options).then(onSuccess).catch(onError);
+};
+```
+
+-  Inside the useSuperHeroesData Custom Hook:
+
+```js
+import { request } from '..utilsfolder';
+
+const fetchSuperHeroes = () => {
+   // return axios.get('http://localhost:4000/superheroes');
+   return request({ url: '/superheroes' });
+};
+
+// fetcher for useMutation
+const addSuperHero = (hero) => {
+   // return axios.post('http://localhost:4000/superheroes', hero);
+   return request({ url: '/superheroes', method: 'post', data: hero });
+};
+```
